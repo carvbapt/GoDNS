@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name"> GoDNS </string>
     <string name="dns"> Google DNS </string>
+    <string name="ssid"> SSID </string>
+    <string name="dns1"> DNS 1 </string>
+    <string name="dns2"> DNS 2 </string>
+    <string name="noconect"> NOT CONNECTED </string>
     <string name="sair"> Sair </string>
 </resources>
