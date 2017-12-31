@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">GoDNS</string>
+    <string name="app_name"> GoDNS </string>
+    <string name="dns"> Google DNS </string>
+    <string name="sair"> Sair </string>
 </resources>
