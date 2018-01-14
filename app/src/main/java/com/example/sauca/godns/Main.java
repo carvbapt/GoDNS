@@ -8,17 +8,16 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 public class Main extends AppCompatActivity implements View.OnClickListener {
 
-    Button bt_DNS,bt_Sair;
+    Toolbar toolbar;
+    Button bt_DNS,bt_Refresh, bt_Sair;
     TextView tv_Ssid,tv_Dns1,tv_Dns2;
 
     ConnectivityManager cm;
@@ -33,6 +32,15 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Find the toolbar view inside the activity layout
+        toolbar = findViewById(R.id.toolbar);
+        // Sets the Toolbar to act as the ActionBar for this Activity window.
+        // Make sure the toolbar exists in the activity and is not null
+        setSupportActionBar(toolbar);
+
+        //Toast.makeText(this,getNetworkInfo().toString(),Toast.LENGTH_SHORT).show();
+
+        bt_Refresh = findViewById(R.id.BT_Refresh);
         bt_DNS = findViewById(R.id.BT_Dns);
         bt_Sair = findViewById(R.id.BT_Sair);
 
@@ -40,29 +48,11 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
         tv_Dns1 = findViewById(R.id.TV_Dns1);
         tv_Dns2 = findViewById(R.id.TV_Dns2);
 
+        if(getNetworkInfo().isConnected())
+            connect();
+        else
+            Toast.makeText(this,R.string.noconect,Toast.LENGTH_LONG).show();
 
-
-        cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        networkInfo = cm.getActiveNetworkInfo();
-
-        if (networkInfo.isConnected()) {
-            wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            connectionInfo = wifiManager.getConnectionInfo();
-            connectionDhcp = wifiManager.getDhcpInfo();
-            if (connectionInfo != null ) {
-                tv_Ssid.setText(connectionInfo.getSSID());
-                strIPAddess = ((connectionDhcp.dns1 ) & 0xFF) + "." + ((connectionDhcp.dns1 >> 8) & 0xFF) + "."
-                        + ((connectionDhcp.dns1 >> 16) & 0xFF) + "." + ((connectionDhcp.dns1 >> 24) & 0xFF);
-                tv_Dns1.setText(strIPAddess);
-                strIPAddess = ((connectionDhcp.dns2 ) & 0xFF) + "." + ((connectionDhcp.dns2 >> 8) & 0xFF) + "."
-                        + ((connectionDhcp.dns2 >> 16) & 0xFF) + "." + ((connectionDhcp.dns2 >> 24) & 0xFF);
-                tv_Dns2.setText(strIPAddess);
-            }else
-                tv_Ssid.setText(getText(R.string.noconect));
-        }else {
-            Toast.makeText(this, R.string.noconect, Toast.LENGTH_SHORT).show();
-            tv_Ssid.setText(getText(R.string.noconect));
-        }
         bt_DNS.setOnClickListener(this);
         bt_Sair.setOnClickListener(this);
 
@@ -71,16 +61,62 @@ public class Main extends AppCompatActivity implements View.OnClickListener {
     @Override
     public void onClick(View view) {
 
-        if(view==findViewById(R.id.BT_Dns)){
-            if (tv_Ssid.getCurrentTextColor() == getResources().getColor(R.color.red)) {
-                tv_Ssid.setTextColor(getResources().getColor(R.color.green));
-                Toast.makeText(this, "TESTE", Toast.LENGTH_SHORT).show();
-            } else
-                tv_Ssid.setTextColor(getResources().getColor(R.color.red));
+        if(view==findViewById(R.id.BT_Refresh)){
+            if(getNetworkInfo().isConnected())
+                connect();
+            else {
+                Toast.makeText(this, R.string.noconect, Toast.LENGTH_LONG).show();
+                tv_Ssid.setText(getText(R.string.ssid));
+                tv_Dns1.setText(getText(R.string.dns1));
+                tv_Dns2.setText(getText(R.string.dns2));
+                tv_Dns1.setTextColor(getResources().getColor(R.color.white));
+                tv_Dns2.setTextColor(getResources().getColor(R.color.white));
+            }
+        }else if(view==findViewById(R.id.BT_Dns)){
+            ChangeDns();
         }else if(view == findViewById(R.id.BT_Sair)){
             moveTaskToBack(true);
             finish();
             System.exit(0);
         }
+    }
+
+    public NetworkInfo getNetworkInfo() {
+        cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+
+        if (cm != null) {
+            networkInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        }
+
+        return networkInfo;
+    }
+
+    public void connect(){
+
+        if (networkInfo.isConnected()) {
+            wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+            if (wifiManager != null) {
+                connectionInfo = wifiManager.getConnectionInfo();
+                connectionDhcp = wifiManager.getDhcpInfo();
+            }
+            if (connectionInfo != null && connectionDhcp!= null ) {
+                tv_Ssid.setText(connectionInfo.getSSID());
+                strIPAddess = ((connectionDhcp.dns1 ) & 0xFF) + "." + ((connectionDhcp.dns1 >> 8) & 0xFF) + "."
+                        + ((connectionDhcp.dns1 >> 16) & 0xFF) + "." + ((connectionDhcp.dns1 >> 24) & 0xFF);
+                tv_Dns1.setText(strIPAddess);
+                strIPAddess = ((connectionDhcp.dns2 ) & 0xFF) + "." + ((connectionDhcp.dns2 >> 8) & 0xFF) + "."
+                        + ((connectionDhcp.dns2 >> 16) & 0xFF) + "." + ((connectionDhcp.dns2 >> 24) & 0xFF);
+                tv_Dns2.setText(strIPAddess);
+            }
+        }
+    }
+
+    public void ChangeDns(){
+        Toast.makeText(this, "TESTE", Toast.LENGTH_SHORT).show();
+        tv_Dns1.setText(getText(R.string.dns1));
+        tv_Dns2.setText(getText(R.string.dns2));
+        tv_Dns1.setTextColor(getResources().getColor(R.color.green));
+        tv_Dns2.setTextColor(getResources().getColor(R.color.green));
     }
 }
